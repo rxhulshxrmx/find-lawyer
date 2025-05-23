@@ -40,12 +40,49 @@ async function testPostgres() {
     connectionString,
     ssl: {
       rejectUnauthorized: false
-    }
+    },
+    application_name: 'find_lawyer_app_test',
+    connectionTimeoutMillis: 20000, // 20 seconds
+    statement_timeout: 30000, // 30 seconds
+    query_timeout: 30000, // 30 seconds
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
   });
 
   try {
     console.log("\nTesting PostgreSQL connection...");
-    await client.connect();
+    
+    // Add connection event listeners
+    client.on('error', (err) => {
+      console.error('PostgreSQL client error:', err);
+    });
+
+    client.on('end', () => {
+      console.log('PostgreSQL connection ended');
+    });
+
+    // Try to connect with retries
+    let connected = false;
+    let retries = 3;
+    
+    while (!connected && retries > 0) {
+      try {
+        console.log(`Attempting to connect (${retries} retries left)...`);
+        await client.connect();
+        connected = true;
+      } catch (error) {
+        console.error(`Connection attempt failed:`, error);
+        retries--;
+        if (retries > 0) {
+          console.log('Waiting 5 seconds before retrying...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
+    }
+
+    if (!connected) {
+      throw new Error('Failed to connect after multiple attempts');
+    }
     
     // Test basic connection
     const result = await client.query("SELECT 1 as test");
@@ -80,9 +117,20 @@ async function testPostgres() {
     return true;
   } catch (error) {
     console.error("❌ PostgreSQL test failed:", error);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+    }
     return false;
   } finally {
-    await client.end();
+    try {
+      await client.end();
+    } catch (error) {
+      console.error('Error closing connection:', error);
+    }
   }
 }
 
