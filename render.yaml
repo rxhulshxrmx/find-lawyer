@@ -3,14 +3,22 @@ services:
     name: find-lawyer
     env: docker
     plan: free
-    healthCheckPath: /
+    healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: find-lawyer-db
           property: connectionString
+      - key: GOOGLE_GENERATIVE_AI_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
 
 databases:
   - name: find-lawyer-db
     plan: free
-    ipAllowList: [] 
+    ipAllowList: []
+    extensions:
+      - vector 

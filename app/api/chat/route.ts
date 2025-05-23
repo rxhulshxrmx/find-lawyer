@@ -33,9 +33,8 @@ export async function POST(req: Request) {
 
     console.log('Searching for lawyers with query:', lastMessage.content);
     
-    // Search for relevant lawyers
-    const searchUrl = new URL('/api/search', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
-    const searchResponse = await fetch(searchUrl.toString(), {
+    // Search for relevant lawyers - using relative URL
+    const searchResponse = await fetch('/api/search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: lastMessage.content }),
