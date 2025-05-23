@@ -18,6 +18,19 @@ function getErrorMessage(error: unknown): string {
   return typeof error === 'string' ? error : 'Unknown error';
 }
 
+// Add OPTIONS handler for CORS
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+      'Access-Control-Max-Age': '86400'
+    }
+  });
+}
+
 export async function POST(req: Request) {
   console.log('Chat API called');
   
@@ -90,7 +103,13 @@ Format the response in a clear, structured way with all relevant details about t
         });
 
         console.log('Received response from Gemini');
-        return new StreamingTextResponse(GoogleGenerativeAIStream(result));
+        return new StreamingTextResponse(GoogleGenerativeAIStream(result), {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept'
+          }
+        });
       } catch (geminiError) {
         console.error('Error calling Gemini API:', geminiError);
         throw new Error(`Failed to generate response: ${getErrorMessage(geminiError)}`);
@@ -118,7 +137,15 @@ Format the response in a clear, structured way with all relevant details about t
       console.error('Fallback error handler failed:', fallbackError);
       return new Response(
         JSON.stringify({ error: 'An unexpected error occurred', details: errorMessage }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 500, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept'
+          } 
+        }
       );
     }
   }
