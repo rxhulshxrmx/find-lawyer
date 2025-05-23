@@ -14,7 +14,11 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_APP_URL
-        sync: false
+        value: https://lawyer.sloq.me
+      - key: PORT
+        value: 10000
+    domains:
+      - name: lawyer.sloq.me
 
 databases:
   - name: find-lawyer-db

@@ -22,7 +22,7 @@ declare global {
 
 export default function Chat() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: `${process.env.NEXT_PUBLIC_APP_URL || ''}/api/chat`,
+    api: '/api/chat',
     onError: (error) => {
       console.error('Chat error:', error);
       toast.error('An error occurred. Please try again.');

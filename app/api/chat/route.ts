@@ -33,8 +33,9 @@ export async function POST(req: Request) {
 
     console.log('Searching for lawyers with query:', lastMessage.content);
     
-    // Search for relevant lawyers - using relative URL
-    const searchResponse = await fetch('/api/search', {
+    // Search for relevant lawyers - using absolute URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const searchResponse = await fetch(`${baseUrl}/api/search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: lastMessage.content }),

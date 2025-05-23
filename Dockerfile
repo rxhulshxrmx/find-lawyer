@@ -17,7 +17,7 @@ WORKDIR /app
 
 ENV NODE_ENV production
 ENV HOSTNAME "0.0.0.0"
-ENV PORT 3000
+ENV PORT 10000
 
 # Install wget for healthcheck
 RUN apk add --no-cache wget
@@ -31,6 +31,6 @@ COPY --from=builder /app/.next/static ./.next/static
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE ${PORT}
 
 CMD ["node", "server.js"] 
