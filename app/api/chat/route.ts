@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { StreamingTextResponse, GoogleGenerativeAIStream } from 'ai';
+import { findRelevantContent } from '@/lib/ai/embedding';
 
 interface SearchResult {
   content: string;
@@ -9,8 +10,6 @@ interface SearchResult {
 
 // Initialize the Google Generative AI client
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || '');
-
-export const runtime = 'edge';
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -33,34 +32,12 @@ export async function POST(req: Request) {
 
     console.log('Searching for lawyers with query:', lastMessage.content);
     
-    // Search for relevant lawyers - using absolute URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    console.log('Using base URL:', baseUrl);
-    
     try {
-      const searchResponse = await fetch(`${baseUrl}/api/search`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ query: lastMessage.content }),
-      });
-
-      console.log('Search response status:', searchResponse.status);
+      // Search for relevant lawyers directly
+      const results = await findRelevantContent(lastMessage.content);
+      console.log('Search results count:', results.length);
       
-      if (!searchResponse.ok) {
-        const errorText = await searchResponse.text();
-        console.error('Search API error:', errorText);
-        throw new Error(`Search API returned ${searchResponse.status}: ${errorText}`);
-      }
-
-      const searchData = await searchResponse.json() as { results?: SearchResult[] };
-      console.log('Search results count:', searchData.results?.length || 0);
-      
-      const relevantContent = searchData.results || [];
-      
-      if (relevantContent.length === 0) {
+      if (results.length === 0) {
         console.log('No relevant content found for query:', lastMessage.content);
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         const result = await model.generateContentStream({
@@ -75,7 +52,7 @@ export async function POST(req: Request) {
       }
 
       // Format lawyer information
-      const lawyerInfo = relevantContent.map(result => {
+      const lawyerInfo = results.map(result => {
         try {
           const lawyer = typeof result.content === 'string' ? JSON.parse(result.content) : result.content;
           return `
@@ -119,7 +96,7 @@ Format the response in a clear, structured way with all relevant details about t
         throw new Error(`Failed to generate response: ${getErrorMessage(geminiError)}`);
       }
     } catch (searchError) {
-      console.error('Search API error:', searchError);
+      console.error('Search error:', searchError);
       throw new Error(`Search failed: ${getErrorMessage(searchError)}`);
     }
   } catch (error) {
