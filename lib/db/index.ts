@@ -1,30 +1,10 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from './schema/embeddings';
-import { env } from "@/lib/env.mjs";
+import { getDbConfig } from "./config";
 
-// Connection string
-const connectionString = env.DATABASE_URL;
-
-// Configure postgres client with retries and IPv4 preference
-const client = postgres(connectionString, {
-  max: 10, // Maximum number of connections
-  idle_timeout: 20, // Idle connection timeout in seconds
-  connect_timeout: 20, // Increased connection timeout
-  max_lifetime: 60 * 30, // Maximum lifetime of a connection in seconds
-  ssl: 'require', // Enable SSL
-  prepare: false, // Disable prepared statements for better compatibility
-  connection: {
-    application_name: 'find_lawyer_app', // Add application name for better monitoring
-    options: '-c prefer_ipv4=true', // Prefer IPv4 connections
-  },
-  onnotice: () => {}, // Ignore notice messages
-  debug: (connection_id, str, args) => {
-    if (str.includes('error')) {
-      console.error(`DB Debug [${connection_id}]:`, str, args);
-    }
-  },
-});
+// Create postgres client with shared config
+const client = postgres(getDbConfig());
 
 // Create drizzle instance
 export const db = drizzle(client, { schema });

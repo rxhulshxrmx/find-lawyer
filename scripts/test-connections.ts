@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Client } from "pg";
 import dotenv from 'dotenv';
+import { getNodePgConfig } from "../lib/db/config";
 
 // Load environment variables
 dotenv.config();
@@ -36,18 +37,7 @@ async function testPostgres() {
     return false;
   }
 
-  const client = new Client({
-    connectionString,
-    ssl: {
-      rejectUnauthorized: false
-    },
-    application_name: 'find_lawyer_app_test',
-    connectionTimeoutMillis: 20000, // 20 seconds
-    statement_timeout: 30000, // 30 seconds
-    query_timeout: 30000, // 30 seconds
-    keepAlive: true,
-    keepAliveInitialDelayMillis: 10000,
-  });
+  const client = new Client(getNodePgConfig('find_lawyer_app_test'));
 
   try {
     console.log("\nTesting PostgreSQL connection...");
