@@ -21,8 +21,10 @@ declare global {
 }
 
 export default function Chat() {
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
+    api: `${baseUrl}/api/chat`,
     onError: (error) => {
       console.error('Chat error:', error);
       toast.error('An error occurred. Please try again.');
